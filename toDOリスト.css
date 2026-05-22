@@ -1,0 +1,5 @@
+@charset "utf-8";
+li.done{
+    text-decoration: line-through;
+    color: gray;
+}

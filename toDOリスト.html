@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>toDOリスト</title>
+    <link rel="stylesheet" href="toDOリスト.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <header>
+        <h1>toDOリスト</h1>
+        <details>
+            <summary>完了したタスク</summary>
+            <ul id="done-list"></ul>
+        </details>
+    </header>
+    <main>
+        <h1>登録はこちら</h1>
+      <form>
+        <input type="text" id="todo-input" placeholder="ここに入力してください" autocomplete="off">
+        <input type="button" value="登録" id="submit-button">
+        <input type="button" value="全消去" id="clear-button">
+           
+           <ul id="todo-list"> 
+           </ul>
+      </form>
+        <script>
+            //javascriptに取り込む
+            const toDolist=document.getElementById('todo-list');
+            const donelist=document.getElementById('done-list');
+            const inputBtn=document.getElementById('submit-button');
+            const inputArea=document.getElementById('todo-input');
+            const clearBtn=document.getElementById('clear-button');
+            //リストの追加と続いてボタンの追加
+            function createToDoElement(taskObj){
+                const newli=document.createElement('li'); 
+                if(typeof taskObj === 'object' && taskObj !== null){
+                    newli.textContent=taskObj.text;}
+                else{newli.textContent=taskObj;}
+                if(taskObj.done){
+                    newli.classList.add('done');
+                }
+                const doneBtn=document.createElement('button');
+                doneBtn.textContent='完了';
+                const dltBtn=document.createElement('button');
+                dltBtn.textContent='削除';
+                const upBtn=document.createElement('button');
+                upBtn.textContent='▲';
+                const downBtn=document.createElement('button');
+                downBtn.textContent='▼';
+                newli.appendChild(doneBtn);
+                newli.appendChild(dltBtn);
+                newli.appendChild(upBtn);
+                newli.appendChild(downBtn);
+                if(taskObj.done){
+                    donelist.appendChild(newli);
+                }else{
+                    toDolist.appendChild(newli);}
+            }; 
+            //ローカルストレージのデータを持ってくる
+            function loadDataStorage(){
+                const localdata= localStorage.getItem('saveList');
+                if(!localdata) return;
+                JSON.parse(localdata).forEach(taskObj=>{
+                createToDoElement(taskObj);
+            })};
+            loadDataStorage();
+           
+            //ローカルストレージに保存する
+            function saveToStorage(){
+            const listItems=[];
+            document.querySelectorAll('#todo-list li,#done-list li').forEach(li => {
+                listItems.push({
+                    text: li.firstChild.textContent.trim(),
+                    done:li.classList.contains('done')
+             });
+            });
+            localStorage.setItem('saveList',JSON.stringify(listItems));};
+            //登録するときの動作
+            function addList(){
+                const toDoText=inputArea.value;
+                if(toDoText ==='') return;
+                const taskObj = {
+                    text: toDoText,
+                    done: false,
+                };
+                createToDoElement(taskObj);
+                inputArea.value='';
+                console.log('登録できました',taskObj); 
+                saveToStorage();
+            } 
+            //エンターキーでの登録をする
+            inputArea.addEventListener('keydown',(e)=>{
+                if(e.key === 'Enter'){
+                    e.preventDefault();
+                    addList();
+                }
+                });
+            //登録ボタンクリックで登録する
+            inputBtn.addEventListener('click',(e)=>{
+                  addList();  
+                })
+            //完了と削除ボタン,上下ボタンの動作
+            document.addEventListener('click',(e)=>{
+                if(e.target.textContent !== '完了'&&  e.target.textContent !== '削除'&& e.target.textContent !=='▲' && e.target.textContent !=='▼'){
+                    return;
+                  }
+                    e.preventDefault();
+                    const li=e.target.closest('li');
+                    if(!li)return;
+                if(e.target.textContent === '完了'){
+                    li.classList.toggle('done');
+                    if(li.classList.contains('done')){
+                        document.getElementById('done-list').appendChild(li);
+                    }
+                    else{
+                        document.getElementById('todo-list').appendChild(li);
+                    }
+                    saveToStorage();
+                }
+                else if(e.target.textContent === '削除'){
+                    li.remove();
+                    saveToStorage();
+                }
+                else if(e.target.textContent === '▲'){
+                    const previousli=li.previousElementSibling;
+                    if(previousli){
+                        li.parentNode.insertBefore(li,previousli);
+                        saveToStorage();}
+                }
+                else if(e.target.textContent === '▼'){
+                    const nextli=li.nextElementSibling;
+                    if(nextli){
+                        li.parentNode.insertBefore(li,nextli.nextElementSibling);
+                        saveToStorage();}
+                }
+            })
+            //全消去ボタンの動作
+            clearBtn.onclick=()=>{
+                if(confirm('すべてを削除しますか？')){
+                    toDolist.innerHTML='';
+                    donelist.innerHTML='';
+                    localStorage.clear();
+                }
+            };
+        </script>
+    </main>
+</body>
+</html>
